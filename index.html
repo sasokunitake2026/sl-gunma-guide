@@ -1,0 +1,416 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#1f3a33">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="SLぐんまガイド">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon.svg">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}</style>
+<title>SLぐんま 沿線産業史ガイド</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@600;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: one-column cab-gauge app — line tabs, live gauge, now-playing plate, route ladder */
+:root{
+  --bg:#f3f1ec; --surface:#ffffff; --ink:#1d2421; --muted:#6a716c; --rule:#dcd8cf;
+  --engine:#1f3a33; --brass:#a87a2a; --smoke:#e8e5de; --live:#b8372b; --done:#5f7d6e;
+  --line-joetsu:#2f6b4f; --line-shinetsu:#8a4b2b; --line-ryomo:#3d5c8c;
+  --f-display:"Shippori Mincho B1","Hiragino Mincho ProN","Yu Mincho",serif;
+  --f-body:"Zen Kaku Gothic New","Hiragino Sans","Yu Gothic",system-ui,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#121614; --surface:#1b211e; --ink:#ebe8e1; --muted:#9aa29c; --rule:#2e3632;
+  --engine:#0c1210; --brass:#d3a552; --smoke:#232a26; --live:#e0614f; --done:#86a895;
+  --line-joetsu:#5fae86; --line-shinetsu:#d0875c; --line-ryomo:#7c9fd6; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#121614; --surface:#1b211e; --ink:#ebe8e1; --muted:#9aa29c; --rule:#2e3632;
+  --engine:#0c1210; --brass:#d3a552; --smoke:#232a26; --live:#e0614f; --done:#86a895;
+  --line-joetsu:#5fae86; --line-shinetsu:#d0875c; --line-ryomo:#7c9fd6; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.7;margin:0}
+.wrap{max-width:720px;margin:0 auto;padding-block:20px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:18px}
+header{display:flex;flex-direction:column;gap:4px}
+.eyebrow{font-size:12px;letter-spacing:.12em;color:var(--brass);font-weight:700}
+h1{font-family:var(--f-display);font-weight:800;font-size:clamp(26px,6vw,36px);line-height:1.25;margin:0;text-wrap:balance}
+.lede{color:var(--muted);margin:0;font-size:14px}
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.tab{appearance:none;border:1.5px solid var(--rule);background:var(--surface);color:var(--ink);border-radius:10px;padding:10px 8px;text-align:left;cursor:pointer;font:inherit;display:flex;flex-direction:column;gap:2px;min-width:0}
+.tab b{font-size:15px}
+.tab span{font-size:11.5px;color:var(--muted);line-height:1.4}
+.tab[aria-selected="true"]{border-color:var(--lc);box-shadow:inset 0 -4px 0 var(--lc)}
+.tab:focus-visible,.btn:focus-visible,.stop:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+.cab{background:var(--engine);color:#efe9dc;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:14px}
+.gauges{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.gauge{display:flex;flex-direction:column;gap:2px;min-width:0}
+.gauge small{font-size:11px;letter-spacing:.1em;color:#b9b19d}
+.gauge output{font-family:var(--f-mono);font-size:18px;font-variant-numeric:tabular-nums;color:#f4d58d;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.controls{display:flex;flex-wrap:wrap;gap:8px}
+.btn{appearance:none;border:1px solid #4d6a60;background:#2b4a42;color:#f3eee2;border-radius:999px;padding:9px 16px;font:inherit;font-weight:700;font-size:14px;cursor:pointer}
+.btn.primary{background:var(--brass);border-color:var(--brass);color:#1b1408}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.status{font-size:13px;color:#cfc7b3;display:flex;align-items:center;gap:8px}
+.dot{width:9px;height:9px;border-radius:50%;background:#6c746f;flex:none}
+.dot.on{background:#7fd39b;box-shadow:0 0 0 4px rgba(127,211,155,.18)}
+.dot.sim{background:#f4d58d}
+.plate{background:var(--surface);border:1px solid var(--rule);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:8px}
+.plate .where{font-size:12px;color:var(--muted);letter-spacing:.06em;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.chip{font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;background:var(--smoke);color:var(--ink)}
+.chip.live{background:var(--live);color:#fff}
+.plate h2{font-family:var(--f-display);font-size:22px;line-height:1.35;margin:0;text-wrap:balance}
+.lines3{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:6px}
+.lines3 li{padding-left:14px;border-left:3px solid var(--rule);transition:border-color .2s,color .2s;color:var(--muted)}
+.lines3 li.reading{border-left-color:var(--lc);color:var(--ink)}
+.plate.idle .lines3 li{color:var(--ink)}
+.route{background:var(--surface);border:1px solid var(--rule);border-radius:14px;padding:6px 0}
+.route h3{font-size:13px;letter-spacing:.08em;color:var(--muted);margin:10px 18px 4px;font-weight:700}
+.stop{display:grid;grid-template-columns:28px 1fr auto;gap:10px;align-items:center;width:100%;appearance:none;background:none;border:0;color:inherit;font:inherit;text-align:left;padding:10px 18px;cursor:pointer}
+.stop:hover{background:var(--smoke)}
+.rail{position:relative;width:28px;height:100%;min-height:34px;display:flex;justify-content:center}
+.rail::before{content:"";position:absolute;top:0;bottom:0;width:3px;background:var(--lc);opacity:.35}
+.stop:first-of-type .rail::before{top:50%}
+.stop:last-child .rail::before{bottom:50%}
+.knob{position:relative;align-self:center;width:14px;height:14px;border-radius:50%;background:var(--surface);border:3px solid var(--lc)}
+.stop.done .knob{background:var(--done);border-color:var(--done)}
+.stop.current .knob{background:var(--live);border-color:var(--live);box-shadow:0 0 0 5px color-mix(in srgb,var(--live) 25%,transparent)}
+.stop .nm{display:flex;flex-direction:column;min-width:0}
+.stop .nm b{font-size:15px}
+.stop .nm span{font-size:12.5px;color:var(--muted);line-height:1.45}
+.stop .km{font-family:var(--f-mono);font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.note{font-size:12.5px;color:var(--muted);line-height:1.6;margin:0}
+.settings{display:flex;flex-wrap:wrap;gap:14px;align-items:center;font-size:13px;color:#cfc7b3}
+.settings label{display:flex;gap:6px;align-items:center}
+.settings select{font:inherit;font-size:13px;background:#2b4a42;color:#f3eee2;border:1px solid #4d6a60;border-radius:6px;padding:3px 6px}
+@media (max-width:420px){.gauge output{font-size:15px}.tab span{display:none}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head><body>
+
+<div class="wrap" id="app">
+  <header>
+    <div class="eyebrow">SL GUNMA ・ 沿線産業史</div>
+    <h1>SLぐんま 沿線産業史ガイド</h1>
+    <p class="lede">列車の位置が各スポットの約1.2km圏内に入ると、その土地の産業の歴史を自動で読み上げます。路線を選んで出発してください。</p>
+  </header>
+
+  <div class="tabs" role="tablist" id="tabs"></div>
+
+  <section class="cab" aria-label="運転台">
+    <div class="gauges">
+      <div class="gauge"><small>現在地に近い</small><output id="gNear">—</output></div>
+      <div class="gauge"><small>次の解説まで</small><output id="gNext">—</output></div>
+      <div class="gauge"><small>解説済み</small><output id="gDone">0 / 0</output></div>
+    </div>
+    <div class="controls">
+      <button class="btn primary" id="btnGps">GPSで出発</button>
+      <button class="btn" id="btnSim">走行シミュレーション</button>
+      <button class="btn" id="btnStop" disabled>停止</button>
+      <button class="btn" id="btnReset">リセット</button>
+    </div>
+    <div class="settings">
+      <label for="rate">読み上げ速度
+        <select id="rate"><option value="0.9">ゆっくり</option><option value="1" selected>ふつう</option><option value="1.15">はやめ</option></select>
+      </label>
+      <label for="simSpeed">シミュレーション速度
+        <select id="simSpeed"><option value="120">×120</option><option value="300" selected>×300</option><option value="900">×900</option></select>
+      </label>
+    </div>
+    <div class="status"><span class="dot" id="dot"></span><span id="statusText">停車中。GPSかシミュレーションで出発します。</span></div>
+  </section>
+
+  <article class="plate idle" id="plate" aria-live="polite">
+    <div class="where"><span class="chip" id="plateChip">案内</span><span id="plateWhere">—</span></div>
+    <h2 id="plateTitle">駅名をタップすると、いつでも解説を聞けます</h2>
+    <ul class="lines3" id="plateLines"><li>走行中は自動で、停車中は手動で再生できます。</li></ul>
+  </article>
+
+  <section class="route" aria-label="沿線スポット">
+    <h3 id="routeHead">沿線スポット</h3>
+    <div id="routeList"></div>
+  </section>
+
+  <p class="note" id="envNote">座標は各駅付近の概略値です。GPSはHTTPSで配信されたページで動作します（このファイルをWebサーバに置き、スマホのブラウザで開いてください）。音声はブラウザ内蔵の日本語読み上げを使います。走行中は画面をつけたままにしてください（画面が消えると位置取得と音声が止まります）。</p>
+</div>
+
+<script>
+// ---- Content: 3 lines, each spot = 3 short lines of narration ----
+const LINES = {
+  joetsu: {
+    name: "上越線", train: "SLぐんま みなかみ", section: "高崎 → 水上", color: "var(--line-joetsu)",
+    spots: [
+      {n:"高崎", lat:36.3228, lon:139.0127, t:"交通の要、高崎",
+       l:["高崎は中山道の宿場町として栄え、江戸から北国・信州へ向かう物資の中継地でした。",
+          "明治に入ると鉄道が集まり、群馬の生糸を横浜へ運ぶ拠点になります。",
+          "このSLが走る上越線も、首都圏と日本海側を結ぶ大動脈として、ここから始まります。"]},
+      {n:"新前橋", lat:36.3716, lon:139.0463, t:"糸の町・前橋",
+       l:["前橋は「糸の町」と呼ばれた生糸の都です。",
+          "1870年、前橋藩はスイス人技師を招いて、日本初の器械製糸所を開きました。富岡製糸場より2年早い挑戦でした。",
+          "前橋の生糸は横浜から海外へ直接輸出され、町の近代化を支えました。"]},
+      {n:"群馬総社", lat:36.4051, lon:139.0444, t:"古墳と用水の里",
+       l:["このあたりは古代、上毛野の中心で、総社古墳群が残ります。",
+          "江戸時代初期、総社藩主・秋元氏が利根川から天狗岩用水を引き、荒れ地を水田に変えました。",
+          "水を治めることが、この地の農業と人々の暮らしの土台になりました。"]},
+      {n:"渋川", lat:36.4889, lon:139.0029, t:"水力が育てた化学工業",
+       l:["渋川は三国街道の宿場で、伊香保温泉の玄関口でもあります。",
+          "利根川と吾妻川が合流するこの地では、豊富な水力発電を背景に、昭和の初めから化学工場が立地しました。",
+          "電気と水を原料に変える工業が、農村だった渋川を工業の町へと変えていきました。"]},
+      {n:"津久田", lat:36.5675, lon:139.0410, t:"赤城山麓の養蚕",
+       l:["右手に広がる赤城山の西麓は、かつて一面の桑畑でした。",
+          "農家は家の二階で蚕を育て、繭を売って現金収入を得ていました。",
+          "群馬の生糸王国は、こうした山あいの農家の手仕事に支えられていたのです。"]},
+      {n:"沼田", lat:36.6375, lon:139.0410, t:"河岸段丘とこんにゃく",
+       l:["沼田は日本有数の河岸段丘の上に築かれた、真田氏ゆかりの城下町です。",
+          "水はけのよい段丘と冷涼な気候は、こんにゃく芋やりんごの栽培に向いていました。",
+          "いまも群馬県は、こんにゃく芋の生産量で全国の約9割を占めています。"]},
+      {n:"水上", lat:36.7700, lon:138.9701, t:"トンネルとダム",
+       l:["1931年、清水トンネルの開通で上越線が全通し、東京と新潟が短く結ばれました。",
+          "利根川の上流には矢木沢ダムなどのダム群が築かれ、首都圏の水がめと電力を担っています。",
+          "鉄道と水資源が、谷川岳のふもとの温泉町を首都圏とつないできました。"]}
+    ]
+  },
+  shinetsu: {
+    name: "信越線", train: "SLぐんま よこかわ", section: "高崎 → 横川", color: "var(--line-shinetsu)",
+    spots: [
+      {n:"高崎", lat:36.3228, lon:139.0127, t:"絹の道の起点",
+       l:["高崎からは、上信電鉄で富岡製糸場へも向かえます。",
+          "1872年に開業した富岡製糸場は、2014年に絹産業遺産群とともに世界遺産になりました。",
+          "信越線は、その絹の産地と横浜、そして信州を結ぶ道でもありました。"]},
+      {n:"群馬八幡", lat:36.3311, lon:138.9520, t:"高崎だるま",
+       l:["この先の豊岡地区は、高崎だるまの産地です。",
+          "江戸時代、少林山達磨寺の和尚が農家の副業として、だるま作りを教えたのが始まりとされます。",
+          "冬の農閑期の手仕事が、いまでは全国の縁起だるまの大半を生む産業になりました。"]},
+      {n:"安中", lat:36.3289, lon:138.8990, t:"組合製糸と製錬",
+       l:["安中では明治時代、農家が力を合わせる組合製糸「碓氷社」が生まれ、生糸を共同で出荷しました。",
+          "昭和に入ると亜鉛の製錬所が建ち、重工業の町としての顔も持つようになります。",
+          "一方で鉱害も経験し、産業と暮らしの両立を考える土地にもなりました。"]},
+      {n:"磯部", lat:36.3058, lon:138.8355, t:"温泉記号発祥の地",
+       l:["磯部温泉は、地図の温泉記号が初めて使われた地として知られています。",
+          "江戸時代の土地争いの裁定文書に、温泉を示す印が描かれていました。",
+          "鉱泉を使って焼く磯部せんべいは、温泉が生んだ名物です。"]},
+      {n:"松井田", lat:36.3226, lon:138.7975, t:"関所と梅の里",
+       l:["松井田は中山道の宿場町で、近くには碓氷関所が置かれました。",
+          "峠を越える旅人と荷物の往来が、町の商いを支えていました。",
+          "周辺の丘陵は梅の産地で、春には梅林が白く染まります。"]},
+      {n:"横川", lat:36.3355, lon:138.7316, t:"碓氷峠と峠の釜めし",
+       l:["横川は、急勾配の碓氷峠に挑む鉄道の基地でした。",
+          "1893年、歯車を使うアプト式で峠越えが開通し、のちに専用の機関車が列車を押し上げました。",
+          "停車時間を生かした駅弁「峠の釜めし」も、この峠が生んだ名物です。"]}
+    ]
+  },
+  ryomo: {
+    name: "両毛線", train: "SL運行時（臨時）", section: "新前橋 → 桐生", color: "var(--line-ryomo)",
+    spots: [
+      {n:"新前橋", lat:36.3716, lon:139.0463, t:"織物の道、両毛線",
+       l:["両毛線は、上野国と下野国、つまり群馬と栃木を結ぶ路線です。",
+          "明治時代、織物の産地どうしを結ぶため、民間の両毛鉄道として開業しました。",
+          "沿線には、生糸と絹織物で栄えた町が連なっています。"]},
+      {n:"前橋", lat:36.3836, lon:139.0730, t:"生糸の都",
+       l:["前橋は明治時代、生糸の取引で全国に名を知られた町です。",
+          "生糸商人たちは、その富で学校や公共の施設をつくり、町を育てました。",
+          "前橋の生糸は、横浜港から海外へ渡っていきました。"]},
+      {n:"伊勢崎", lat:36.3247, lon:139.1964, t:"伊勢崎銘仙",
+       l:["伊勢崎は、大正から昭和初期にかけて大流行した伊勢崎銘仙の産地です。",
+          "大胆な柄の絹織物は、女性の普段着として全国で愛されました。",
+          "近くの境島村には、蚕の育て方を改良した田島弥平の旧宅があり、世界遺産になっています。"]},
+      {n:"岩宿", lat:36.3958, lon:139.2850, t:"日本の旧石器時代",
+       l:["岩宿は、日本に旧石器時代があったことを初めて証明した遺跡の地です。",
+          "行商をしながら考古学を続けた相沢忠洋が、赤土の中から石器を見つけました。",
+          "人がこの地で暮らし、道具を作ってきた歴史の、いちばん古い一頁です。"]},
+      {n:"桐生", lat:36.4113, lon:139.3341, t:"西の西陣、東の桐生",
+       l:["桐生は、千年以上の歴史を持つ絹織物の町です。",
+          "「西の西陣、東の桐生」と呼ばれ、高級織物の一大産地として栄えました。",
+          "町には今も、明かりを取り込むのこぎり屋根の織物工場が残っています。"]}
+    ]
+  }
+};
+
+const RADIUS_M = 1200;
+
+// ---- State ----
+let lineKey = "joetsu";
+let played = new Set();
+let currentIdx = -1;
+let mode = "idle"; // idle | gps | sim
+let watchId = null, simTimer = null, simPos = 0, simPath = null;
+const queue = []; let speaking = false;
+
+const $ = id => document.getElementById(id);
+function store(k, v){ try{ localStorage.setItem(k, v); }catch(e){} }
+function load(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+
+function dist(a, b){ // meters, haversine
+  const R = 6371000, toR = x => x*Math.PI/180;
+  const dLat = toR(b.lat-a.lat), dLon = toR(b.lon-a.lon);
+  const h = Math.sin(dLat/2)**2 + Math.cos(toR(a.lat))*Math.cos(toR(b.lat))*Math.sin(dLon/2)**2;
+  return 2*R*Math.asin(Math.sqrt(h));
+}
+const fmt = m => m < 1000 ? Math.round(m) + " m" : (m/1000).toFixed(1) + " km";
+
+// ---- Render ----
+function renderTabs(){
+  $("tabs").innerHTML = "";
+  Object.entries(LINES).forEach(([k, L]) => {
+    const b = document.createElement("button");
+    b.className = "tab"; b.role = "tab"; b.id = "tab-" + k;
+    b.style.setProperty("--lc", L.color);
+    b.setAttribute("aria-selected", k === lineKey);
+    b.innerHTML = `<b></b><span></span>`;
+    b.querySelector("b").textContent = L.name;
+    b.querySelector("span").textContent = L.train + "｜" + L.section;
+    b.onclick = () => { if (k === lineKey) return; stopAll(); lineKey = k; store("slg-line", k); resetProgress(); renderAll(); };
+    $("tabs").appendChild(b);
+  });
+}
+function renderRoute(){
+  const L = LINES[lineKey];
+  document.documentElement.style.setProperty("--lc", L.color);
+  $("routeHead").textContent = `${L.name}（${L.section}）の解説スポット`;
+  const list = $("routeList"); list.innerHTML = "";
+  let cum = 0;
+  L.spots.forEach((s, i) => {
+    if (i > 0) cum += dist(L.spots[i-1], s);
+    const b = document.createElement("button");
+    b.className = "stop" + (played.has(i) ? " done" : "") + (i === currentIdx ? " current" : "");
+    b.innerHTML = `<span class="rail"><span class="knob"></span></span><span class="nm"><b></b><span></span></span><span class="km"></span>`;
+    b.querySelector("b").textContent = s.n;
+    b.querySelector(".nm span").textContent = s.t;
+    b.querySelector(".km").textContent = (cum/1000).toFixed(1) + " km";
+    b.onclick = () => { unlockSpeech(); speakSpot(i, true); };
+    list.appendChild(b);
+  });
+  $("gDone").textContent = `${played.size} / ${L.spots.length}`;
+}
+function renderAll(){ renderTabs(); renderRoute(); }
+
+function showPlate(i, lineIdx, live){
+  const s = LINES[lineKey].spots[i];
+  $("plate").classList.toggle("idle", lineIdx < 0);
+  $("plateChip").textContent = live ? "放送中" : "解説";
+  $("plateChip").className = "chip" + (live ? " live" : "");
+  $("plateWhere").textContent = `${LINES[lineKey].name}・${s.n}付近`;
+  $("plateTitle").textContent = s.t;
+  const ul = $("plateLines"); ul.innerHTML = "";
+  s.l.forEach((txt, k) => { const li = document.createElement("li"); li.textContent = txt; if (k === lineIdx) li.className = "reading"; ul.appendChild(li); });
+}
+
+// ---- Speech (browser speechSynthesis, 3 lines per spot) ----
+let jaVoice = null;
+function pickVoice(){
+  if (!("speechSynthesis" in window)) return;
+  const vs = speechSynthesis.getVoices().filter(v => /^ja/i.test(v.lang));
+  jaVoice = vs.find(v => /Kyoko|O-ren|Google|Siri/i.test(v.name)) || vs[0] || null;
+}
+if ("speechSynthesis" in window){ pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
+let unlocked = false;
+function unlockSpeech(){
+  if (unlocked || !("speechSynthesis" in window)) return;
+  unlocked = true; const u = new SpeechSynthesisUtterance(" "); u.volume = 0; speechSynthesis.speak(u);
+}
+function speakSpot(i, manual){
+  if (!manual && played.has(i)) return;
+  played.add(i); currentIdx = i; renderRoute();
+  queue.push(i); if (!speaking) nextInQueue();
+}
+function nextInQueue(){
+  const i = queue.shift();
+  if (i === undefined){ speaking = false; $("plateChip").textContent = "解説"; $("plateChip").className = "chip"; return; }
+  speaking = true;
+  const s = LINES[lineKey].spots[i];
+  if (!("speechSynthesis" in window)){ showPlate(i, -1, false); speaking = false; setStatus("この端末は音声読み上げに対応していません。文字で表示します。"); return; }
+  const parts = [`${s.n}付近。${s.t}。`, ...s.l];
+  let k = 0;
+  const say = () => {
+    if (k >= parts.length){ setTimeout(nextInQueue, 600); return; }
+    showPlate(i, k - 1, true);
+    const u = new SpeechSynthesisUtterance(parts[k]);
+    u.lang = "ja-JP"; if (jaVoice) u.voice = jaVoice;
+    u.rate = parseFloat($("rate").value);
+    u.onend = () => { k++; setTimeout(say, 350); };
+    u.onerror = () => { k = parts.length; say(); };
+    speechSynthesis.speak(u);
+  };
+  say();
+}
+function stopSpeech(){ queue.length = 0; speaking = false; if ("speechSynthesis" in window) speechSynthesis.cancel(); }
+
+// ---- Position handling ----
+function onPosition(p){
+  const spots = LINES[lineKey].spots;
+  let best = -1, bestD = Infinity;
+  spots.forEach((s, i) => { const d = dist(p, s); if (d < bestD){ bestD = d; best = i; } });
+  $("gNear").textContent = `${spots[best].n} ${fmt(bestD)}`;
+  const nextIdx = spots.findIndex((s, i) => !played.has(i) && i >= Math.max(0, currentIdx));
+  $("gNext").textContent = nextIdx >= 0 ? `${spots[nextIdx].n} ${fmt(dist(p, spots[nextIdx]))}` : "全区間 完了";
+  if (bestD <= RADIUS_M && !played.has(best)) speakSpot(best, false);
+}
+
+// Keep the screen on while riding (mobile browsers pause GPS/speech when the screen locks)
+let wakeLock = null;
+async function keepAwake(){ try{ if ("wakeLock" in navigator) wakeLock = await navigator.wakeLock.request("screen"); }catch(e){} }
+function releaseAwake(){ try{ wakeLock && wakeLock.release(); }catch(e){} wakeLock = null; }
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && mode !== "idle") keepAwake(); });
+
+function setStatus(t, cls){ $("statusText").textContent = t; $("dot").className = "dot" + (cls ? " " + cls : ""); }
+function setMode(m){
+  mode = m;
+  if (m === "idle") releaseAwake(); else keepAwake();
+  $("btnStop").disabled = m === "idle";
+  $("btnGps").disabled = m !== "idle";
+  $("btnSim").disabled = m !== "idle";
+}
+
+function startGps(){
+  unlockSpeech();
+  if (!("geolocation" in navigator)){ setStatus("この環境では位置情報を使えません。走行シミュレーションをお試しください。"); return; }
+  setStatus("位置情報を取得しています…", "on"); setMode("gps");
+  watchId = navigator.geolocation.watchPosition(
+    pos => { setStatus(`GPS走行中（精度 約${Math.round(pos.coords.accuracy)}m）`, "on"); onPosition({lat:pos.coords.latitude, lon:pos.coords.longitude}); },
+    err => { stopAll(); setStatus(err.code === 1 ? "位置情報の利用が許可されていません。HTTPSのページで許可するか、走行シミュレーションをお使いください。" : "位置情報を取得できませんでした。電波の良い場所で再度お試しください。"); },
+    {enableHighAccuracy:true, maximumAge:5000, timeout:20000}
+  );
+}
+
+function startSim(){
+  unlockSpeech();
+  const spots = LINES[lineKey].spots;
+  simPath = []; let total = 0;
+  spots.forEach((s, i) => { if (i) total += dist(spots[i-1], s); simPath.push({...s, at: total}); });
+  simPos = 0; setMode("sim");
+  const TICK = 250, KMH = 50;
+  simTimer = setInterval(() => {
+    if (speaking) { setStatus("シミュレーション中（解説を聞く間は減速）", "sim"); simPos += KMH/3.6 * TICK/1000 * 20; }
+    else { simPos += KMH/3.6 * TICK/1000 * parseFloat($("simSpeed").value); setStatus(`シミュレーション走行中 ${(simPos/1000).toFixed(1)} km 地点`, "sim"); }
+    if (simPos >= total){ simPos = total; onPosition(simPath[simPath.length-1]); clearInterval(simTimer); simTimer = null; setMode("idle"); setStatus("終点に到着しました。おつかれさまでした。"); return; }
+    const j = simPath.findIndex(q => q.at > simPos);
+    const a = simPath[j-1], b = simPath[j], f = (simPos - a.at) / (b.at - a.at);
+    onPosition({lat: a.lat + (b.lat-a.lat)*f, lon: a.lon + (b.lon-a.lon)*f});
+  }, TICK);
+}
+
+function stopAll(){
+  if (watchId !== null){ navigator.geolocation.clearWatch(watchId); watchId = null; }
+  if (simTimer){ clearInterval(simTimer); simTimer = null; }
+  stopSpeech(); setMode("idle"); setStatus("停車中。GPSかシミュレーションで出発します。");
+}
+function resetProgress(){
+  played = new Set(); currentIdx = -1;
+  $("gNear").textContent = "—"; $("gNext").textContent = "—";
+  $("plate").classList.add("idle"); $("plateChip").textContent = "案内"; $("plateChip").className = "chip";
+  $("plateWhere").textContent = "—"; $("plateTitle").textContent = "駅名をタップすると、いつでも解説を聞けます";
+  $("plateLines").innerHTML = "<li>走行中は自動で、停車中は手動で再生できます。</li>";
+}
+
+$("btnGps").onclick = startGps;
+$("btnSim").onclick = startSim;
+$("btnStop").onclick = stopAll;
+$("btnReset").onclick = () => { stopAll(); resetProgress(); renderRoute(); };
+
+const saved = load("slg-line"); if (saved && LINES[saved]) lineKey = saved;
+renderAll();
+</script>
+</body></html>
